@@ -1,0 +1,10 @@
+name: PrismaXPStorage
+version: '1.0-SNAPSHOT'
+main: me.kermx.prismaXPStorage.PrismaXPStorage
+api-version: '1.21'
+commands:
+  xpstore:
+    description: Stores your XP in an item
+    usage: /xpstore <amount>
+    permission: prisma_xp_storage.xpstore
+    permission-message: You don't have permission to use this command!
