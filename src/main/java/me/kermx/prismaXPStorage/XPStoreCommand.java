@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class XPStoreCommand implements CommandExecutor, TabCompleter {
     private final PrismaXPStorage plugin;
     private final List<String> commonXPValues = Arrays.asList("max", "315", "1395", "5345");
-    private final int MAX_BOOKS = 64;
+    private final int MAX_BOOKS = 2304;
 
     public XPStoreCommand(PrismaXPStorage plugin) {
         this.plugin = plugin;
@@ -100,24 +100,47 @@ public class XPStoreCommand implements CommandExecutor, TabCompleter {
         }
 
         // Check if player has at least one free inventory slot
-        // Since books stack, we only need one free slot
         if (player.getInventory().firstEmpty() == -1) {
             player.sendMessage(Component.text("You need at least one free inventory slot!", NamedTextColor.RED));
             return true;
         }
 
+        // Calculate available inventory space
+        int availableSpace = 0;
+        ItemStack xpItem = XPItemManager.createXPItem(amount);
+
+        // Check existing stacks that can accept the XP books
+        for (ItemStack stack : player.getInventory().getStorageContents()) {
+            if (stack == null) {
+                // Empty slot can hold a full stack
+                availableSpace += xpItem.getMaxStackSize();
+            } else if (stack.isSimilar(xpItem) && stack.getAmount() < stack.getMaxStackSize()) {
+                // Existing similar stack with room
+                availableSpace += (stack.getMaxStackSize() - stack.getAmount());
+            }
+        }
+
+        // Limit quantity to available space
+        if (quantity > availableSpace) {
+            player.sendMessage(Component.text("You only have space for " + availableSpace +
+                    " books. Creating that many instead.", NamedTextColor.YELLOW));
+            quantity = availableSpace;
+            // Recalculate total XP needed
+            totalXpNeeded = amount * quantity;
+        }
+
         // Remove XP from player
         XPUtils.setTotalExperience(player, playerXp - totalXpNeeded);
 
-        // Create and give XP books (they'll automatically stack)
-        ItemStack xpItem = XPItemManager.createXPItem(amount);
+        // Create and give XP books
         xpItem.setAmount(quantity);
         player.getInventory().addItem(xpItem);
 
         if (quantity == 1) {
             player.sendMessage(Component.text("You have stored " + amount + " XP in a book!", NamedTextColor.GREEN));
         } else {
-            player.sendMessage(Component.text("You have stored " + totalXpNeeded + " XP in " + quantity + " books! (" + amount + " XP each)", NamedTextColor.GREEN));
+            player.sendMessage(Component.text("You have stored " + totalXpNeeded + " XP in " +
+                    quantity + " books! (" + amount + " XP each)", NamedTextColor.GREEN));
         }
 
         return true;

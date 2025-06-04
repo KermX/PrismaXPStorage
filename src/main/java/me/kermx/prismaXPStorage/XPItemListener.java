@@ -35,16 +35,29 @@ public class XPItemListener implements Listener {
                 }
 
                 int xpAmount = XPItemManager.getXPAmount(item);
+                int booksToUse = 1;
 
-                XPUtils.addExperience(player, xpAmount);
+                // If player is sneaking, use the entire stack
+                if (player.isSneaking()) {
+                    booksToUse = item.getAmount();
+                    int totalXP = xpAmount * booksToUse;
 
-                if (item.getAmount() > 1) {
-                    item.setAmount(item.getAmount() - 1);
-                } else {
+                    XPUtils.addExperience(player, totalXP);
                     player.getInventory().setItemInMainHand(null);
-                }
 
-                player.sendMessage(Component.text("You retrieved " + xpAmount + " XP!", NamedTextColor.GREEN));
+                    player.sendMessage(Component.text("You retrieved " + totalXP + " XP from " + booksToUse + " books!", NamedTextColor.GREEN));
+                } else {
+                    // Original behavior for single book
+                    XPUtils.addExperience(player, xpAmount);
+
+                    if (item.getAmount() > 1) {
+                        item.setAmount(item.getAmount() - 1);
+                    } else {
+                        player.getInventory().setItemInMainHand(null);
+                    }
+
+                    player.sendMessage(Component.text("You retrieved " + xpAmount + " XP!", NamedTextColor.GREEN));
+                }
             }
         }
     }

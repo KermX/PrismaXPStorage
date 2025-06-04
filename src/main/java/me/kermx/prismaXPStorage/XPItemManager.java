@@ -26,6 +26,22 @@ public class XPItemManager {
 
             List<Component> lore = new ArrayList<>();
             lore.add(Component.text("Right click to retrieve stored XP").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+            lore.add(Component.text("Sneak + right click to use entire stack").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
+
+            int levelEquivalent = 0;
+            int tempXp = amount;
+            while (tempXp > 0) {
+                int nextLevelXp = XPUtils.getExperienceToNext(levelEquivalent);
+                if (tempXp >= nextLevelXp) {
+                    tempXp -= nextLevelXp;
+                    levelEquivalent++;
+                } else {
+                    break;
+                }
+            }
+
+            lore.add(Component.text("Equivalent to approximately level " + levelEquivalent)
+                    .color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC, false));
             meta.lore(lore);
 
             meta.setEnchantmentGlintOverride(true);
